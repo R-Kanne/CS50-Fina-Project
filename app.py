@@ -5,3 +5,7 @@ from flask_session import Session
 
 
 
+
+
+
+# TODO create new branch and start creatin maybe some routes
