@@ -1,0 +1,23 @@
+The main idea of the project:
+    A web application using flask. The core idea being that user enters the website and can upload an mp3 file and choose some filter/action. 
+    I will then process send the file to backend where it will be processed and modified using c. The user can then download the new file.
+
+Core technologies:
+    Python, Flask, C
+
+Where and how will i deploy this website?
+    A VPS (Virtual Private Server) gives you full control over Flask, C execution, and file handling.
+
+    Recommended VPS Providers (Low-Cost Options)
+    Provider	    Cheapest Plan	Specs	                    Estimated Cost
+    Linode	        $5/month	    1GB RAM, 1 vCPU, 25GB SSD	$5/month
+    DigitalOcean$   4/month	        512MB RAM, 1 vCPU, 10GB SSD	$4/month
+    Vultr	        $5/month	    1GB RAM, 1 vCPU, 25GB SSD	$5/month
+
+Integrating C:
+    *   Compile your C code and run it using Python's subprocess module.
+    *   If you want to directly call a C function inside Python, you can use ctypes.
+
+1
+
+
