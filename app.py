@@ -8,7 +8,24 @@ app = Flask(__name__)
 
 
 
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 def index():
     """The main page of the website"""
-    return render_template("index.html")
+    if request.method == 'POST':
+        file = request.files['file']
+        # TODO i should validate that it is an mp3 file.
+        # Really think trough the security aspect of receiving an unknown file to your server.
+        file.save('uploads/raw/' + file.filename)
+        return render_template("index.html")
+    
+
+
+
+
+
+
+
+
+# This line should run the debugger
+if __name__ == "__main__":
+    app.run(debug=True)
