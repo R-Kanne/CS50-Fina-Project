@@ -20,4 +20,5 @@ Integrating C:
 
 1
 
+Just focus on searching for a single thing at a time from file/frames, while keeping in mind what the overall structure might evolve into. The point is that I need to extract a bunch of data and return it. I should naturally start from the beginning of the frame and find everything I can before moving on inside the frame. 
 
