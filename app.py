@@ -17,12 +17,8 @@ def index():
         # Really think trough the security aspect of receiving an unknown file to your server.
         file.save('uploads/raw/' + file.filename)
         return render_template("index.html")
+    return render_template("index.html")
     
-
-
-
-
-
 
 
 
