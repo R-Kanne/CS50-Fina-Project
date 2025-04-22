@@ -1,10 +1,14 @@
 #include <stdio.h>
+#include <string.h>
 
 #define BUFFER_SIZE 1024
+#define OVERLAP_SIZE 4  // How many bytes to overlap between buffers
+
 
 int main(void)
 {
     unsigned char buffer[BUFFER_SIZE];   // Setting buffer syze to 1 kilobyte.
+    unsigned char prev_buffer[OVERLAP_SIZE];    // Buffer that will be added to the beginning of each new buffer.
 
     const char* mpeg_versions[] =   // Lookup table for mpeg versions
     {
@@ -13,6 +17,31 @@ int main(void)
         "MPEG Version 2",    // 10
         "MPEG Version 1"     // 11
     };
+
+    const char* layers[] = { "Reserved", "Layer III", "Layer II", "Layer I" };  // TODO verify layer lookup table
+
+    const int bitrates[2][3][16] =  // TODO verify bitrate lookup table
+    {
+        // MPEG Version 2 & 2.5
+        {
+            // Layer III
+            { 0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0 },
+            // Layer II
+            { 0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0 },
+            // Layer I
+            { 0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0 }
+        },
+        // MPEG Version 1
+        {
+            // Layer III
+            { 0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0 },
+            // Layer II
+            { 0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0 },
+            // Layer I
+            { 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0 }
+        }
+    };
+
 
     FILE* file = fopen("../uploads/raw/song.mp3", "rb");  // this needs to dynamically choose the file later
     if (file == NULL)
@@ -23,8 +52,17 @@ int main(void)
     int counter = 0;    // for counting frames
     while (fread(buffer, 1, BUFFER_SIZE, file) > 0) 
     {
+        unsigned char combined_buffer[BUFFER_SIZE + OVERLAP_SIZE];  // Buffer that will actually be scanned for frame header.
+
+        memcpy(combined_buffer, prev_buffer, OVERLAP_SIZE); // Copying prev_buffer to combined_buffer
+
+        memcpy(combined_buffer + OVERLAP_SIZE, buffer, BUFFER_SIZE);    // Copying the current buffer into combined_buffer
+
+        // TODO update values you are scanning in the loop to combined buffer
+
+
         // first i need to verify the file format
-        for (int i = 0; i < BUFFER_SIZE - 1; i++) 
+        for (int i = 0; i < BUFFER_SIZE - 4; i++) 
         {
             if (buffer[i] == 0xFF && (buffer[i+1] & 0xE0) == 0xE0) 
             {
@@ -56,3 +94,5 @@ int main(void)
     return 0;
     
 }
+// TODO key thing to figure out is how to accurately detect frames that span across buffer boundar
+// i dont want to blindly start taking data once i find the frame start pattern, instead i need to check for validity across perhaps then entire header
