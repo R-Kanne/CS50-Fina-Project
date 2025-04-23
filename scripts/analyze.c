@@ -13,7 +13,7 @@ int main(void)
     const char* mpeg_versions[] =   // Lookup table for mpeg versions
     {
         "MPEG Version 2.5",  // 00
-        "reserved",          // 01
+        "Reserved",          // 01 Means this is not a valid frame
         "MPEG Version 2",    // 10
         "MPEG Version 1"     // 11
     };
@@ -52,38 +52,44 @@ int main(void)
     int counter = 0;    // for counting frames
     while (fread(buffer, 1, BUFFER_SIZE, file) > 0) 
     {
-        unsigned char combined_buffer[BUFFER_SIZE + OVERLAP_SIZE];  // Buffer that will actually be scanned for frame header.
+        unsigned char combined_buffer[BUFFER_SIZE + OVERLAP_SIZE];  // Initializing buffer that will actually be scanned for frame header.
 
         memcpy(combined_buffer, prev_buffer, OVERLAP_SIZE); // Copying prev_buffer to combined_buffer
 
         memcpy(combined_buffer + OVERLAP_SIZE, buffer, BUFFER_SIZE);    // Copying the current buffer into combined_buffer
+        // but skips the first four bytes where the prev_buffer is already.
+        // TODO add error checking, memcpy assumes these pointers are not NULL.
 
-        // TODO update values you are scanning in the loop to combined buffer
-
-
-        // first i need to verify the file format
-        for (int i = 0; i < BUFFER_SIZE - 4; i++) 
+        // Looping over the buffer
+        for (int i = 0; i < (BUFFER_SIZE + OVERLAP_SIZE - 4); i++) 
         {
-            if (buffer[i] == 0xFF && (buffer[i+1] & 0xE0) == 0xE0) 
+            if (combined_buffer[i] == 0xFF && (combined_buffer[i+1] & 0xE0) == 0xE0) 
             {
                 // Here i have found frame header
-                unsigned char b1 = buffer[i];
-                unsigned char b2 = buffer[i + 1];
-                unsigned char b3 = buffer[i + 2];
-                unsigned char b4 = buffer[i + 3];
+                unsigned char b2 = combined_buffer[i + 1];
+                unsigned char b3 = combined_buffer[i + 2];
+                unsigned char b4 = combined_buffer[i + 3];
+                unsigned char b1 = combined_buffer[i];
                 // TODO verfify the correctness of the bitwise operations here
                 int mpeg_version_id = (b2 & 0x18) >> 3;
                 int layer_description = (b2 & 0x06) >> 1;
                 int bitrate_index = (b3 & 0xF0) >> 4;
                 int sampling_rate_index = (b3 & 0x0C) >> 2;
+                // Checking if any values are reserved meaning not valid
+                if (mpeg_version_id == 1 || layer_description == 0) 
+                {
+                    continue;  // Skips invalid frame.
+                }
                 // Looking up these actual values
-                const char* version = mpeg_versions[mpeg_version_id];
+                const char* version = mpeg_versions[mpeg_version_id]; // If one of these is reserverd this means frame is not valid.
+                const char* layer_str = layers[layer_description];
+                
 
 
                 counter++;
                 //printf("Found frame %i at buffer index %d\n", counter, i);
-                printf("MPEG: %s, Layer: %d, Bitrate index: %d, Sampling rate index: %d\n",
-                    version, layer_description, bitrate_index, sampling_rate_index);
+                printf("MPEG: %s, Layer: %s, Bitrate index: %d, Sampling rate index: %d\n",
+                    version, layer_str, bitrate_index, sampling_rate_index);
 
 
             }
