@@ -70,10 +70,10 @@ int main(void)
                 unsigned char b3 = combined_buffer[i + 2];
                 unsigned char b4 = combined_buffer[i + 3];
                 unsigned char b1 = combined_buffer[i];
-                // TODO verfify the correctness of the bitwise operations here
+                // Using bitwise operations to extract data
                 int mpeg_version_id = (b2 & 0x18) >> 3;
                 int layer_description = (b2 & 0x06) >> 1;
-                int bitrate_index = (b3 & 0xF0) >> 4;
+                unsigned int bitrate_index = (b3 & 0xF0) >> 4; // here in song.mp3 correct header stores int 14.
                 int sampling_rate_index = (b3 & 0x0C) >> 2;
                 // Checking if any values are reserved meaning not valid
                 if (mpeg_version_id == 1 || layer_description == 0) 
@@ -83,13 +83,18 @@ int main(void)
                 // Looking up these actual values
                 const char* version = mpeg_versions[mpeg_version_id]; // If one of these is reserverd this means frame is not valid.
                 const char* layer_str = layers[layer_description];
+                int bitrate_kbps = bitrates[mpeg_version_id][layer_description][bitrate_index];
+                // TODO one issue here is it is using version_id to access bitrates lookup table, but the version do not match the indexes of 
+                // version id table!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                // TODO there is an issue with how bitrate is extracted
                 
 
 
                 counter++;
                 //printf("Found frame %i at buffer index %d\n", counter, i);
                 printf("MPEG: %s, Layer: %s, Bitrate index: %d, Sampling rate index: %d\n",
-                    version, layer_str, bitrate_index, sampling_rate_index);
+                    version, layer_str, bitrate_kbps, sampling_rate_index);
 
 
             }
