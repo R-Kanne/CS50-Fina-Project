@@ -43,7 +43,7 @@ int main(void)
     };
 
 
-    FILE* file = fopen("../uploads/raw/song.mp3", "rb");  // this needs to dynamically choose the file later
+    FILE* file = fopen("../uploads/raw/Till i C.mp3", "rb");  // this needs to dynamically choose the file later
     if (file == NULL)
     {
         perror("Failure opening the file");
@@ -71,29 +71,25 @@ int main(void)
                 unsigned char b4 = combined_buffer[i + 3];
                 unsigned char b1 = combined_buffer[i];
                 // Using bitwise operations to extract data
-                int mpeg_version_id = (b2 & 0x18) >> 3;
-                int layer_description = (b2 & 0x06) >> 1;
+                int mpeg_version_id = (b2 & 0x18) >> 3; // evaluates to 3 for song.mp3
+                int layer_description = (b2 & 0x06) >> 1;   // evaluates to 1 for song.mp3
                 unsigned int bitrate_index = (b3 & 0xF0) >> 4; // here in song.mp3 correct header stores int 14.
                 int sampling_rate_index = (b3 & 0x0C) >> 2;
                 // Checking if any values are reserved meaning not valid
-                if (mpeg_version_id == 1 || layer_description == 0) 
+                if (mpeg_version_id == 1 || layer_description == 0 || bitrate_index == 0 || bitrate_index == 15) 
                 {
                     continue;  // Skips invalid frame.
                 }
                 // Looking up these actual values
                 const char* version = mpeg_versions[mpeg_version_id]; // If one of these is reserverd this means frame is not valid.
                 const char* layer_str = layers[layer_description];
-                int bitrate_kbps = bitrates[mpeg_version_id][layer_description][bitrate_index];
-                // TODO one issue here is it is using version_id to access bitrates lookup table, but the version do not match the indexes of 
-                // version id table!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                // TODO there is an issue with how bitrate is extracted
+                int version_index = (mpeg_version_id == 3) ? 1 : 0; // Adjusting version_index for bitrates table
+                int layer_index = layer_description - 1;    // Adjusting layer_index for bitrates table
+                int bitrate_kbps = bitrates[version_index][layer_index][bitrate_index];
                 
-
-
                 counter++;
                 //printf("Found frame %i at buffer index %d\n", counter, i);
-                printf("MPEG: %s, Layer: %s, Bitrate index: %d, Sampling rate index: %d\n",
+                printf("MPEG: %s, Layer: %s, Bitrate: %d, Sampling rate index: %d\n",
                     version, layer_str, bitrate_kbps, sampling_rate_index);
 
 
@@ -105,5 +101,5 @@ int main(void)
     return 0;
     
 }
-// TODO key thing to figure out is how to accurately detect frames that span across buffer boundar
+// TODO key thing to figure out is how to accurately detect frames that span across buffer boundaries
 // i dont want to blindly start taking data once i find the frame start pattern, instead i need to check for validity across perhaps then entire header
