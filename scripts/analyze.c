@@ -41,9 +41,23 @@ int main(void)
             { 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0 }
         }
     };
+    const int sampling_rate_table[4][4] = 
+{
+    { 11025, 12000, 8000, 0 },  // MPEG 2.5
+    { 0,     0,     0,    0 },  // Reserved (ID=1, we should skip this anyway)
+    { 22050, 24000, 16000, 0 }, // MPEG 2
+    { 44100, 48000, 32000, 0 }  // MPEG 1
+};
+    const char *channel_mode[4] =   // Channel mode lookup table
+    {
+        "Stereo", 
+        "Joint Stereo", 
+        "Dual Channel", 
+        "Single Channel (Mono)"
+    };
 
 
-    FILE* file = fopen("../uploads/raw/song.mp3", "rb");  // this needs to dynamically choose the file later
+    FILE* file = fopen("../uploads/raw/without_me.mp3", "rb");  // this needs to dynamically choose the file later
     if (file == NULL)
     {
         perror("Failure opening the file");
@@ -78,6 +92,7 @@ int main(void)
                 int layer_description = (b2 & 0x06) >> 1;   // evaluates to 1 for song.mp3
                 unsigned int bitrate_index = (b3 & 0xF0) >> 4; // here in song.mp3 correct header stores int 14.
                 int sampling_rate_index = (b3 & 0x0C) >> 2;
+                // TODO check if sampling_rate_index value is valid!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 // Checking if any values are reserved meaning not valid
                 if (mpeg_version_id == 1 || layer_description == 0 || bitrate_index == 0 || bitrate_index == 15) 
                 {
@@ -89,11 +104,13 @@ int main(void)
                 int version_index = (mpeg_version_id == 3) ? 1 : 0; // Adjusting version_index for bitrates table
                 int layer_index = layer_description - 1;    // Adjusting layer_index for bitrates table
                 int bitrate_kbps = bitrates[version_index][layer_index][bitrate_index];
-                
+                int sampling_rate = sampling_rate_table[mpeg_version_id][sampling_rate_index];
+
+                printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
+                return 0;
                 counter++;
-                //printf("Found frame %i at buffer index %d\n", counter, i);
-                printf("MPEG: %s, Layer: %s, Bitrate: %d, Sampling rate index: %d\n",
-                    version, layer_str, bitrate_kbps, sampling_rate_index);
+               // printf("MPEG: %s, Layer: %s, Bitrate: %d, Sampling rate index: %d\n",
+                 //   version, layer_str, bitrate_kbps, sampling_rate_index);
 
         memcpy(prev_buffer, buffer + (BUFFER_SIZE - OVERLAP_SIZE), OVERLAP_SIZE); // Populating prev_buffer
         // For clarity second argument uses pointer arithmetic to move along the pointer 1020 bytes
