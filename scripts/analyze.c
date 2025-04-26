@@ -43,13 +43,16 @@ int main(void)
     };
 
 
-    FILE* file = fopen("../uploads/raw/Till i C.mp3", "rb");  // this needs to dynamically choose the file later
+    FILE* file = fopen("../uploads/raw/song.mp3", "rb");  // this needs to dynamically choose the file later
     if (file == NULL)
     {
         perror("Failure opening the file");
         return 1;
     }
+
     int counter = 0;    // for counting frames
+    memset(prev_buffer, 0, OVERLAP_SIZE);   // Clearing garbage values from prev_buffer for good measure
+
     while (fread(buffer, 1, BUFFER_SIZE, file) > 0) 
     {
         unsigned char combined_buffer[BUFFER_SIZE + OVERLAP_SIZE];  // Initializing buffer that will actually be scanned for frame header.
@@ -91,6 +94,10 @@ int main(void)
                 //printf("Found frame %i at buffer index %d\n", counter, i);
                 printf("MPEG: %s, Layer: %s, Bitrate: %d, Sampling rate index: %d\n",
                     version, layer_str, bitrate_kbps, sampling_rate_index);
+
+        memcpy(prev_buffer, buffer + (BUFFER_SIZE - OVERLAP_SIZE), OVERLAP_SIZE); // Populating prev_buffer
+        // For clarity second argument uses pointer arithmetic to move along the pointer 1020 bytes
+
 
 
             }
