@@ -5,6 +5,18 @@
 #define OVERLAP_SIZE 4  // How many bytes to overlap between buffers
 
 
+typedef struct // Struct for keeping track of frame data to check
+{
+    int mpeg_version_id;
+    int layer_description;
+    int bitrate_index;
+    int sampling_rate_index;
+    // Add more fields later
+} FrameInfo;
+
+// Function prototypes
+int is_valid_frame(FrameInfo frame);
+
 int main(void)
 {
     unsigned char buffer[BUFFER_SIZE];   // Setting buffer syze to 1 kilobyte.
@@ -87,28 +99,28 @@ int main(void)
                 unsigned char b3 = combined_buffer[i + 2];
                 unsigned char b4 = combined_buffer[i + 3];
                 unsigned char b1 = combined_buffer[i];
-                // Using bitwise operations to extract data
-                int mpeg_version_id = (b2 & 0x18) >> 3; // evaluates to 3 for song.mp3
-                int layer_description = (b2 & 0x06) >> 1;   // evaluates to 1 for song.mp3
-                unsigned int bitrate_index = (b3 & 0xF0) >> 4; // here in song.mp3 correct header stores int 14.
-                int sampling_rate_index = (b3 & 0x0C) >> 2;
-                printf("%i", mpeg_version_id);
-                printf("%i", layer_description);
-                printf("%i", bitrate_index);
-                printf("%i", sampling_rate_index);
+                // Using bitwise operations to extract data and store it in a struct
+                FrameInfo frame; // Creates frame of type Frameinfo
+
+                frame.mpeg_version_id = (b2 & 0x18) >> 3; // evaluates to 3 for song.mp3
+                frame.layer_description = (b2 & 0x06) >> 1;   // evaluates to 1 for song.mp3
+                frame.bitrate_index = (b3 & 0xF0) >> 4; // here in song.mp3 correct header stores int 14.
+                frame.sampling_rate_index = (b3 & 0x0C) >> 2;
+           
                 // TODO check if sampling_rate_index value is valid!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 // Checking if any values are reserved meaning not valid
-                if (mpeg_version_id == 1 || layer_description == 0 || bitrate_index == 0 || bitrate_index == 15) 
+                if (!is_valid_frame(frame))
                 {
-                    continue;  // Skips invalid frame.
+                    continue;
                 }
+                
                 // Looking up these actual values
-                const char* version = mpeg_versions[mpeg_version_id]; // If one of these is reserverd this means frame is not valid.
-                const char* layer_str = layers[layer_description];
-                int version_index = (mpeg_version_id == 3) ? 1 : 0; // Adjusting version_index for bitrates table
-                int layer_index = layer_description - 1;    // Adjusting layer_index for bitrates table
-                int bitrate_kbps = bitrates[version_index][layer_index][bitrate_index];
-                int sampling_rate = sampling_rate_table[mpeg_version_id][sampling_rate_index];
+                const char* version = mpeg_versions[frame.mpeg_version_id]; // If one of these is reserved this means frame is not valid.
+                const char* layer_str = layers[frame.layer_description];
+                int version_index = (frame.mpeg_version_id == 3) ? 1 : 0; // Adjusting version_index for bitrates table
+                int layer_index = frame.layer_description - 1;    // Adjusting layer_index for bitrates table
+                int bitrate_kbps = bitrates[version_index][layer_index][frame.bitrate_index];
+                int sampling_rate = sampling_rate_table[frame.mpeg_version_id][frame.sampling_rate_index];
 
                 printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
                 return 0;
@@ -129,5 +141,24 @@ int main(void)
     return 0;
     
 }
-// TODO key thing to figure out is how to accurately detect frames that span across buffer boundaries
+
+int is_valid_frame(FrameInfo frame)
+{
+    if (frame.mpeg_version_id == 1)
+        return 0;
+
+    if (frame.layer_description == 0)
+        return 0;
+
+    if (frame.bitrate_index == 0 || frame.bitrate_index == 15)
+        return 0;
+
+    if (frame.sampling_rate_index == 3)
+        return 0;
+
+    return 1;
+}
+// TODO need to add more checks to verify a frame header, and probably need to then further verify if matching headers are found
+// might be a good idea to create a counter. Anytime i find a potential header that fully passes the checks i look for headers with same data.
+// So something like if potential_header_counter reaches 10, then likely it is valid
 // i dont want to blindly start taking data once i find the frame start pattern, instead i need to check for validity across perhaps then entire header
