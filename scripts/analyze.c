@@ -57,7 +57,7 @@ int main(void)
     };
 
 
-    FILE* file = fopen("../uploads/raw/without_me.mp3", "rb");  // this needs to dynamically choose the file later
+    FILE* file = fopen("../uploads/raw/zombie_dance.mp3", "rb");  // this needs to dynamically choose the file later
     if (file == NULL)
     {
         perror("Failure opening the file");
@@ -92,6 +92,10 @@ int main(void)
                 int layer_description = (b2 & 0x06) >> 1;   // evaluates to 1 for song.mp3
                 unsigned int bitrate_index = (b3 & 0xF0) >> 4; // here in song.mp3 correct header stores int 14.
                 int sampling_rate_index = (b3 & 0x0C) >> 2;
+                printf("%i", mpeg_version_id);
+                printf("%i", layer_description);
+                printf("%i", bitrate_index);
+                printf("%i", sampling_rate_index);
                 // TODO check if sampling_rate_index value is valid!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 // Checking if any values are reserved meaning not valid
                 if (mpeg_version_id == 1 || layer_description == 0 || bitrate_index == 0 || bitrate_index == 15) 
