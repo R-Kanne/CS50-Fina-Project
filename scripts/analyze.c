@@ -12,6 +12,7 @@ typedef struct // Struct for keeping track of frame data
     int bitrate_index;
     int sampling_rate_index;
     int channel_index;
+    int mode_extension;
     // Add more fields later
 } FrameInfo;
 
@@ -109,6 +110,7 @@ int main(void)
                 frame.bitrate_index = (b3 & 0xF0) >> 4; // here in song.mp3 correct header stores int 14.
                 frame.sampling_rate_index = (b3 & 0x0C) >> 2;
                 frame.channel_index = (b4 & 0xC0) >> 6;
+                frame.mode_extension = (b4 & 0x30) >> 4;
            
                 // Verifying the overall structure of potential frame header
                 if (!is_valid_frame(frame))
@@ -157,7 +159,11 @@ int is_valid_frame(FrameInfo frame)
 
     if (frame.sampling_rate_index == 3) // Reserved
         return 0;
+    
+    if (frame.channel_index != 1 && frame.mode_extension != 0)
+        return 0;
 
+    
     return 1;
 }
 // TODO need to add more checks to verify a frame header, and probably need to then further verify if matching headers are found
