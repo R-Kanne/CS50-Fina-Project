@@ -9,10 +9,15 @@ typedef struct // Struct for keeping track of frame data
 {
     int mpeg_version_id;
     int layer_description;
+    int crc_protection;
     int bitrate_index;
     int sampling_rate_index;
+    int padding;
     int channel_index;
     int mode_extension;
+    int copyright;
+    int original;
+    int emphasis;
     // Add more fields later
 } FrameInfo;
 
@@ -107,10 +112,15 @@ int main(void)
 
                 frame.mpeg_version_id = (b2 & 0x18) >> 3; // evaluates to 3 for song.mp3
                 frame.layer_description = (b2 & 0x06) >> 1;   // evaluates to 1 for song.mp3
+                frame.crc_protection = (b2 & 0x1);  // Crc protection bit
                 frame.bitrate_index = (b3 & 0xF0) >> 4; // here in song.mp3 correct header stores int 14.
                 frame.sampling_rate_index = (b3 & 0x0C) >> 2;
+                frame.padding = (b3 & 0x2) >> 1;  // The padding bit
                 frame.channel_index = (b4 & 0xC0) >> 6;
                 frame.mode_extension = (b4 & 0x30) >> 4;
+                frame.copyright = (b4 & 0x8) >> 3;  // Copyright bit
+                frame.original = (b4 & 0x4) >> 2;    // Original or not bit
+                frame.emphasis = (b4 & 0x3); // 
            
                 // Verifying the overall structure of potential frame header
                 if (!is_valid_frame(frame))
@@ -159,10 +169,11 @@ int is_valid_frame(FrameInfo frame)
 
     if (frame.sampling_rate_index == 3) // Reserved
         return 0;
-    
-    if (frame.channel_index != 1 && frame.mode_extension != 0)
+    if (frame.emphasis == 3)    // Reserved
+    {
         return 0;
-
+    }
+    
     
     return 1;
 }
