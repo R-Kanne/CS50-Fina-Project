@@ -23,6 +23,7 @@ typedef struct // Struct for keeping track of frame data
 
 // Function prototypes
 int is_valid_frame(FrameInfo frame);
+int size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampling_rate_table[4][4]);
 
 int main(void)
 {
@@ -136,6 +137,12 @@ int main(void)
                 int bitrate_kbps = bitrates[version_index][layer_index][frame.bitrate_index];
                 int sampling_rate = sampling_rate_table[frame.mpeg_version_id][frame.sampling_rate_index];
 
+                //  Here i should now add the equations logic, basically check which equation to use
+                // then calculate the framesize, by the end of this conditional block i should have the framesize of this frame in bytes
+                // could create a helper funciton that just takes as input the frame, and then checks the values
+                // and calculates the framsize in bytes and returns it
+                int frame_size = size_of_frame(frame, bitrates, sampling_rate_table);
+
                 printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
                 return 0;
                 counter++;
@@ -177,9 +184,41 @@ int is_valid_frame(FrameInfo frame)
     
     return 1;
 }
+
+int size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampling_rate_table[4][4])
+{
+    int version_index = (frame.mpeg_version_id == 3) ? 1 : 0;
+    int layer_index = 3 - frame.layer_description; // 3: Layer I, 2: Layer II, 1: Layer III
+    int bitrate = bitrates[version_index][layer_index][frame.bitrate_index];
+
+    int sampling_rate = sampling_rate_table[frame.mpeg_version_id][frame.sampling_rate_index];
+
+    int padding = frame.padding;
+
+    if (frame.layer_description == 3) // Layer I
+    {
+        return (12 * bitrate * 1000 / sampling_rate + padding) * 4;
+    }
+    else if (frame.layer_description == 2) // Layer II
+    {
+        return 144 * bitrate * 1000 / sampling_rate + padding;
+    }
+    else if (frame.layer_description == 1) // Layer III
+    {
+        if (frame.mpeg_version_id == 3) // MPEG1
+            return 144 * bitrate * 1000 / sampling_rate + padding;
+        else if (frame.mpeg_version_id == 2 || frame.mpeg_version_id == 0) // MPEG2 or 2.5
+            return 72 * bitrate * 1000 / sampling_rate + padding;
+    }
+
+    return 0; // Invalid frame
+}
+
 // TODO need to add more checks to verify a frame header, and probably need to then further verify if matching headers are found
 // might be a good idea to create a counter. Anytime i find a potential header that fully passes the checks i look for headers with same data.
 // So something like if potential_header_counter reaches 10, then likely it is valid
 
 // TODO you got channel_mode data from the last bitwise operation, use that together with the following two bits, that specify mode extension, 
 // to verify if these values could be valid!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+// TODO add docstrings to helper functions
