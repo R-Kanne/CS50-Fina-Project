@@ -147,6 +147,7 @@ int main(void)
 
                 // Now i think i want to skip ahead by the framesize and check if i find synch word there,
                 // if not then get back to the same point but skip the current byte
+                // Use fseek and ftell to move forward!!!!
 
                 printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
                 return 0;
