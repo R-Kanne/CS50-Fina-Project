@@ -77,7 +77,7 @@ int main(void)
     };
 
 
-    FILE* file = fopen("../uploads/raw/zombie_dance.mp3", "rb");  // this needs to dynamically choose the file later
+    FILE* file = fopen("../uploads/raw/song.mp3", "rb");  // this needs to dynamically choose the file later
     if (file == NULL)
     {
         perror("Failure opening the file");
@@ -137,11 +137,16 @@ int main(void)
                 int bitrate_kbps = bitrates[version_index][layer_index][frame.bitrate_index];
                 int sampling_rate = sampling_rate_table[frame.mpeg_version_id][frame.sampling_rate_index];
 
-                //  Here i should now add the equations logic, basically check which equation to use
-                // then calculate the framesize, by the end of this conditional block i should have the framesize of this frame in bytes
-                // could create a helper funciton that just takes as input the frame, and then checks the values
-                // and calculates the framsize in bytes and returns it
+                //  Here the frame size is calculated.
                 int frame_size = size_of_frame(frame, bitrates, sampling_rate_table);
+                if (frame_size == 0)
+                {
+                    continue;   // This means size_of_frame was not able to calculate frame_size.
+                }
+                printf("%i", frame_size);
+
+                // Now i think i want to skip ahead by the framesize and check if i find synch word there,
+                // if not then get back to the same point but skip the current byte
 
                 printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
                 return 0;
@@ -163,6 +168,7 @@ int main(void)
     
 }
 
+// This function takes as input frame data and validates the structure of the frame header returning 1 if structure is valid and 0 if not.
 int is_valid_frame(FrameInfo frame)
 {
     if (frame.mpeg_version_id == 1) // Reserved
@@ -185,6 +191,7 @@ int is_valid_frame(FrameInfo frame)
     return 1;
 }
 
+// This function takes as input frame data, bitrates and sampling_rate_table lookup tables and returns framesize based on appropriate equations.
 int size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampling_rate_table[4][4])
 {
     int version_index = (frame.mpeg_version_id == 3) ? 1 : 0;
