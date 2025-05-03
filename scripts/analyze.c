@@ -151,10 +151,18 @@ int main(void)
                 // Now i think i want to skip ahead by the framesize and check if i find synch word there,
                 // if not then get back to the same point but skip the current byte
                 // Use fseek and ftell to move forward!!!!
-                long true_position = ftell(file) - (1028 - i);  // This should be current position in the file in bytes
-                fseek(file, (frame_size - (1028 - i)), SEEK_CUR);   // maybe hardcoding 1028 here is not good
-                fseek_flag = true;
-                continue;
+                if (fseek_flag)
+                {
+                    // Here i have basically found correct frame for sure and can return data
+                }
+                else
+                {
+                    long true_position = ftell(file) - (1028 - i);  // This should be current position in the file in bytes
+                    fseek(file, (frame_size - (1028 - i)), SEEK_CUR);   // maybe hardcoding 1028 here is not good
+                    fseek_flag = true;
+                    continue;
+
+                }
 
                 printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
                 return 0;
@@ -162,11 +170,15 @@ int main(void)
                // printf("MPEG: %s, Layer: %s, Bitrate: %d, Sampling rate index: %d\n",
                  //   version, layer_str, bitrate_kbps, sampling_rate_index);
 
-        memcpy(prev_buffer, buffer + (BUFFER_SIZE - OVERLAP_SIZE), OVERLAP_SIZE); // Populating prev_buffer
-        // For clarity second argument uses pointer arithmetic to move along the pointer 1020 bytes
-
-
-
+                 
+                 
+                 
+            }
+            memcpy(prev_buffer, buffer + (BUFFER_SIZE - OVERLAP_SIZE), OVERLAP_SIZE); // Populating prev_buffer
+            // For clarity second argument uses pointer arithmetic to move along the pointer 1020 bytes
+            if (fseek_flag)
+            {
+                // This should mean fram_size was skipped, but no frame found, meaning i need to go pack 
             }
         }
         
