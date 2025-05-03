@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define BUFFER_SIZE 1024
 #define OVERLAP_SIZE 4  // How many bytes to overlap between buffers
@@ -27,6 +28,8 @@ int size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampl
 
 int main(void)
 {
+    bool fseek_flag = false;
+    bool ftell_flag = false;
     unsigned char buffer[BUFFER_SIZE];   // Setting buffer syze to 1 kilobyte.
     unsigned char prev_buffer[OVERLAP_SIZE];    // Buffer that will be added to the beginning of each new buffer.
 
@@ -148,6 +151,10 @@ int main(void)
                 // Now i think i want to skip ahead by the framesize and check if i find synch word there,
                 // if not then get back to the same point but skip the current byte
                 // Use fseek and ftell to move forward!!!!
+                long true_position = ftell(file) - (1028 - i);  // This should be current position in the file in bytes
+                fseek(file, (frame_size - (1028 - i)), SEEK_CUR);   // maybe hardcoding 1028 here is not good
+                fseek_flag = true;
+                continue;
 
                 printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
                 return 0;
