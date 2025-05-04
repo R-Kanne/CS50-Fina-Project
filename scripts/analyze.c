@@ -80,7 +80,7 @@ int main(void)
     };
 
 
-    FILE* file = fopen("../uploads/raw/song.mp3", "rb");  // this needs to dynamically choose the file later
+    FILE* file = fopen("../uploads/raw/Till i Collapse.mp3", "rb");  // this needs to dynamically choose the file later
     if (file == NULL)
     {
         perror("Failure opening the file");
@@ -116,6 +116,7 @@ int main(void)
 
                 frame.mpeg_version_id = (b2 & 0x18) >> 3; // evaluates to 3 for song.mp3
                 frame.layer_description = (b2 & 0x06) >> 1;   // evaluates to 1 for song.mp3
+                printf("layer index is: %i\n", frame.layer_description);
                 frame.crc_protection = (b2 & 0x1);  // Crc protection bit
                 frame.bitrate_index = (b3 & 0xF0) >> 4; // here in song.mp3 correct header stores int 14.
                 frame.sampling_rate_index = (b3 & 0x0C) >> 2;
@@ -142,11 +143,12 @@ int main(void)
 
                 //  Here the frame size is calculated.
                 int frame_size = size_of_frame(frame, bitrates, sampling_rate_table);
-                if (frame_size == 0)
+                if (frame_size == 0 || frame_size > 1500)
                 {
+                    printf("Unsuccessful frame size calculation either 0 or over 1500 result!");
                     continue;   // This means size_of_frame was not able to calculate frame_size.
                 }
-                printf("%i", frame_size);
+                printf("frame_size = %i\n", frame_size);
 
                 // Now i think i want to skip ahead by the framesize and check if i find synch word there,
                 // if not then get back to the same point but skip the current byte
@@ -154,23 +156,15 @@ int main(void)
                 if (fseek_flag)
                 {
                     // Here i have basically found correct frame for sure and can return data
+                    printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
+                    return 0;
                 }
-                else
-                {
-                    long true_position = ftell(file) - (1028 - i);  // This should be current position in the file in bytes
-                    fseek(file, (frame_size - (1028 - i)), SEEK_CUR);   // maybe hardcoding 1028 here is not good
-                    fseek_flag = true;
-                    continue;
-
-                }
-
-                printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
-                return 0;
-                counter++;
-               // printf("MPEG: %s, Layer: %s, Bitrate: %d, Sampling rate index: %d\n",
-                 //   version, layer_str, bitrate_kbps, sampling_rate_index);
-
-                 
+                long true_position = ftell(file) - (1028 - i);  // This should be current position in the file in bytes
+                fseek(file, (true_position + frame_size), SEEK_SET);   // Skipping ahead in the file from the current position by frame_size
+                // TODO add some error checking to fseek and ftell
+                fseek_flag = true;
+                printf("SKIPPED AHEAD BY FRAMESIZE\n");
+                continue;
                  
                  
             }
@@ -178,7 +172,7 @@ int main(void)
             // For clarity second argument uses pointer arithmetic to move along the pointer 1020 bytes
             if (fseek_flag)
             {
-                // This should mean fram_size was skipped, but no frame found, meaning i need to go pack 
+                // Here i skipped ahead by framesize, but no header was found, i could either go back or just keep going from this point
             }
         }
         
@@ -249,3 +243,6 @@ int size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampl
 // to verify if these values could be valid!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // TODO add docstrings to helper functions
+
+// TODO recheck the logic of moving the file pointer, also make SURE the bytes to skip are calculated correctly!!!!!!!
+// TODO Implement the rewinding back of the file pointer after skipping and not finding a valid header right there!!!!!!!!
