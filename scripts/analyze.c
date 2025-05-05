@@ -24,7 +24,7 @@ typedef struct // Struct for keeping track of frame data
 
 // Function prototypes
 int is_valid_frame(FrameInfo frame);
-int size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampling_rate_table[4][4]);
+long size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampling_rate_table[4][4]);
 
 int main(void)
 {
@@ -89,6 +89,7 @@ int main(void)
 
     int counter = 0;    // for counting frames
     memset(prev_buffer, 0, OVERLAP_SIZE);   // Clearing garbage values from prev_buffer for good measure
+    long true_position = -1; // Initialyzing variable with invalid value.
 
     while (fread(buffer, 1, BUFFER_SIZE, file) > 0) 
     {
@@ -142,13 +143,13 @@ int main(void)
                 int sampling_rate = sampling_rate_table[frame.mpeg_version_id][frame.sampling_rate_index];
 
                 //  Here the frame size is calculated.
-                int frame_size = size_of_frame(frame, bitrates, sampling_rate_table);
+                long frame_size = size_of_frame(frame, bitrates, sampling_rate_table);
                 if (frame_size == 0 || frame_size > 1500)
                 {
                     printf("Unsuccessful frame size calculation either 0 or over 1500 result!");
                     continue;   // This means size_of_frame was not able to calculate frame_size.
                 }
-                printf("frame_size = %i\n", frame_size);
+                printf("frame_size = %li\n", frame_size);
 
                 // Now i think i want to skip ahead by the framesize and check if i find synch word there,
                 // if not then get back to the same point but skip the current byte
@@ -173,6 +174,8 @@ int main(void)
             if (fseek_flag)
             {
                 // Here i skipped ahead by framesize, but no header was found, i could either go back or just keep going from this point
+                fseek(file, (true_position + 1), SEEK_SET);
+                fseek_flag = false;
             }
         }
         
@@ -206,7 +209,7 @@ int is_valid_frame(FrameInfo frame)
 }
 
 // This function takes as input frame data, bitrates and sampling_rate_table lookup tables and returns framesize based on appropriate equations.
-int size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampling_rate_table[4][4])
+long size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampling_rate_table[4][4])
 {
     int version_index = (frame.mpeg_version_id == 3) ? 1 : 0;
     int layer_index = 3 - frame.layer_description; // 3: Layer I, 2: Layer II, 1: Layer III
@@ -246,3 +249,5 @@ int size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampl
 
 // TODO recheck the logic of moving the file pointer, also make SURE the bytes to skip are calculated correctly!!!!!!!
 // TODO Implement the rewinding back of the file pointer after skipping and not finding a valid header right there!!!!!!!!
+
+// Something with frame calculation seems to be off, for 'Till i Collapse.mp3' the framesize is 261 and the equations should evalute to that
