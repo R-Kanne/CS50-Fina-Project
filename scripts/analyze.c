@@ -3,7 +3,8 @@
 #include <stdbool.h>
 
 #define BUFFER_SIZE 1024
-#define OVERLAP_SIZE 4  // How many bytes to overlap between buffers
+#define OVERLAP_SIZE 4  // How many bytes to overlap between buffers.
+#define MAX_ID3V2_TAG_SIZE 2000000 // Max tolerated size in bytes to check for errors.
 
 
 typedef struct // Struct for keeping track of frame data
@@ -86,8 +87,51 @@ int main(void)
         perror("Failure opening the file");
         return 1;
     }
+    // Skipping ID3v2 Tag if it exists.
+    unsigned char id3_header[3];
+    if (fread(id3_header, 1, 3, file) == 3 &&
+        id3_header[0] == 'I' && id3_header[1] == 'D' && id3_header[2] == '3') 
+    {
+        // ID3v2 tag found
+        unsigned char header_rest[7]; // Bytes 3-9 
+        if (fread(header_rest, 1, 7, file) == 7) 
+        {
+            unsigned char size_bytes[4] = {header_rest[3], header_rest[4], header_rest[5], header_rest[6]}; // Overall bytes 6-9
+            // Reconstructing synchsafe int stored in bytes 6-9 using bitwise operations, synchsafe int corresponds to tag size in bytes.
+            long id3_size = (size_bytes[0] << 21) |
+                        (size_bytes[1] << 14) |
+                        (size_bytes[2] << 7) |
+                        (size_bytes[3]);
+            if (id3_size > MAX_ID3V2_TAG_SIZE) 
+            {
+                printf("Warning: ID3v2 tag size (%ld bytes) seems unusually large.", id3_size);
+                // TODO basically here i need to figure out what to do when tag size is calculated as too large,
+                // in theory i want to either return this info to frontend and refuse futher operation for safety reasons,
+                // Probably just return to user that this file is likely either corrupt or malicious.
+                return 1;
+                
+            }
+                        
+            if (fseek(file, 10 + id3_size, SEEK_SET) != 0) // File pointer skips the ID3 tag.
+            {
+                perror("Error seeking past ID3v2 tag!");
+                return 1;
+            }  
+            printf("ID3v2 tag skipped (%ld bytes).\n", 10 + id3_size);
+        } 
+        else 
+        {
+            printf("Error reading ID3v2 header.\n");
+            // Handle error
+        }
+    } 
+    else 
+    {
+        // No ID3v2 tag at the beginning, rewinding
+        fseek(file, 0, SEEK_SET); // Redundant if no ID3
+    }
 
-    int counter = 0;    // for counting frames
+
     memset(prev_buffer, 0, OVERLAP_SIZE);   // Clearing garbage values from prev_buffer for good measure
     long true_position = -1; // Initialyzing variable with invalid value.
 
@@ -242,12 +286,12 @@ long size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int samp
 // might be a good idea to create a counter. Anytime i find a potential header that fully passes the checks i look for headers with same data.
 // So something like if potential_header_counter reaches 10, then likely it is valid
 
-// TODO you got channel_mode data from the last bitwise operation, use that together with the following two bits, that specify mode extension, 
-// to verify if these values could be valid!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-// TODO add docstrings to helper functions
-
 // TODO recheck the logic of moving the file pointer, also make SURE the bytes to skip are calculated correctly!!!!!!!
 // TODO Implement the rewinding back of the file pointer after skipping and not finding a valid header right there!!!!!!!!
 
-// Something with frame calculation seems to be off, for 'Till i Collapse.mp3' the framesize is 261 and the equations should evalute to that
+// TODO try to implement skipping id3 tags
+
+
+// TODO another thing to double check is true_position variable, how intializing and changing it works across iterations.
+
+// TODO i will add some error checking in multiple places, but i will want to double check exactly how i will handle those errors in finshed product
