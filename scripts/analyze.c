@@ -212,7 +212,7 @@ int is_valid_frame(FrameInfo frame)
 long size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampling_rate_table[4][4])
 {
     int version_index = (frame.mpeg_version_id == 3) ? 1 : 0;
-    int layer_index = 3 - frame.layer_description; // 3: Layer I, 2: Layer II, 1: Layer III
+    int layer_index = frame.layer_description - 1; // 3: Layer I, 2: Layer II, 1: Layer III
     int bitrate = bitrates[version_index][layer_index][frame.bitrate_index];
 
     int sampling_rate = sampling_rate_table[frame.mpeg_version_id][frame.sampling_rate_index];
