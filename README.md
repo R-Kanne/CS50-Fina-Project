@@ -6,7 +6,7 @@ The project is being developed as part of the final project for Harvard's CS50 c
 
 ---
 
-## 🌐 Project Goals
+## Project Goals
 
 - Build a simple web interface for users to upload MP3 files.
 - Use C to efficiently parse the binary structure of MP3 files.
@@ -16,7 +16,7 @@ The project is being developed as part of the final project for Harvard's CS50 c
 
 ---
 
-## ✅ Current Features
+## Current Features
 
 - Skips ID3v2 tags (if present) at the start of the file.
 - Validates MP3 frames based on frame header structure and finding consecutive frames.
@@ -25,7 +25,7 @@ The project is being developed as part of the final project for Harvard's CS50 c
 
 ---
 
-## 🔧 Potential Future Features
+## Potential Future Features
 
 - Show frame-by-frame breakdown.
 - Detect file corruption or frame inconsistencies.
@@ -34,7 +34,7 @@ The project is being developed as part of the final project for Harvard's CS50 c
 
 ---
 
-## 🚀 How to Run (Development)
+## How to Run (Development)
 
 1. Compile the C backend parser:
    ```bash
