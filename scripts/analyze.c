@@ -30,7 +30,7 @@ long size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int samp
 int main(void)
 {
     bool fseek_flag = false;
-    bool ftell_flag = false;
+    bool ftell_flag = false;    // TODO might not need this flag
     unsigned char buffer[BUFFER_SIZE];   // Setting buffer syze to 1 kilobyte.
     unsigned char prev_buffer[OVERLAP_SIZE];    // Buffer that will be added to the beginning of each new buffer.
 
@@ -148,9 +148,9 @@ int main(void)
         // Looping over the buffer
         for (int i = 0; i < (BUFFER_SIZE + OVERLAP_SIZE - 4); i++) 
         {
-            if (combined_buffer[i] == 0xFF && (combined_buffer[i+1] & 0xE0) == 0xE0) 
+            if (combined_buffer[i] == 0xFF && (combined_buffer[i+1] & 0xE0) == 0xE0) // Here i have found potential frame header
             {
-                // Here i have found frame header
+                // Extracting header bytes from the buffer
                 unsigned char b2 = combined_buffer[i + 1];
                 unsigned char b3 = combined_buffer[i + 2];
                 unsigned char b4 = combined_buffer[i + 3];
@@ -195,16 +195,16 @@ int main(void)
                 }
                 printf("frame_size = %li\n", frame_size);
 
-                // Now i think i want to skip ahead by the framesize and check if i find synch word there,
-                // if not then get back to the same point but skip the current byte
-                // Use fseek and ftell to move forward!!!!
-                if (fseek_flag)
+                if (fseek_flag) // This means one frame has been found and skipped size_of_frame and found another
                 {
-                    // Here i have basically found correct frame for sure and can return data
+                    // Here i have found second frame indicating that this frame is very likely valid.
                     printf("%s, %s, Bitrate: %d, Sampling rate: %d\n", version, layer_str, bitrate_kbps, sampling_rate);
                     return 0;
                 }
+
+                // I have found a frame and want to skip ahead by its size to check for another.
                 long true_position = ftell(file) - (1028 - i);  // This should be current position in the file in bytes
+                printf("True_position: %ld\n", true_position);
                 fseek(file, (true_position + frame_size), SEEK_SET);   // Skipping ahead in the file from the current position by frame_size
                 // TODO add some error checking to fseek and ftell
                 fseek_flag = true;
@@ -215,6 +215,7 @@ int main(void)
             }
             memcpy(prev_buffer, buffer + (BUFFER_SIZE - OVERLAP_SIZE), OVERLAP_SIZE); // Populating prev_buffer
             // For clarity second argument uses pointer arithmetic to move along the pointer 1020 bytes
+
             if (fseek_flag)
             {
                 // Here i skipped ahead by framesize, but no header was found, i could either go back or just keep going from this point
@@ -295,3 +296,8 @@ long size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int samp
 // TODO another thing to double check is true_position variable, how intializing and changing it works across iterations.
 
 // TODO i will add some error checking in multiple places, but i will want to double check exactly how i will handle those errors in finshed product
+
+// TODO perhaps add a conditional logic flow chart.
+
+// TODO the likely issue is that when i skip the frame_size i am checking right at the beginning of the buffer, but there is prev_buffer end at the beginning,
+// the actual header is likely 4 bytes into the buffer. But it will fseek back on the first iteration.
