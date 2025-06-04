@@ -81,7 +81,7 @@ int main(void)
     };
 
 
-    FILE* file = fopen("../uploads/raw/Till i Collapse.mp3", "rb");  // this needs to dynamically choose the file later
+    FILE* file = fopen("../uploads/raw/zombie_dance.mp3", "rb");  // this needs to dynamically choose the file later
     if (file == NULL)
     {
         perror("Failure opening the file");
