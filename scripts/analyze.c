@@ -290,22 +290,3 @@ long size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int samp
 
     return 0; // Invalid frame
 }
-
-// TODO need to add more checks to verify a frame header, and probably need to then further verify if matching headers are found
-// might be a good idea to create a counter. Anytime i find a potential header that fully passes the checks i look for headers with same data.
-// So something like if potential_header_counter reaches 10, then likely it is valid
-
-// TODO recheck the logic of moving the file pointer, also make SURE the bytes to skip are calculated correctly!!!!!!!
-// TODO Implement the rewinding back of the file pointer after skipping and not finding a valid header right there!!!!!!!!
-
-// TODO try to implement skipping id3 tags
-
-
-// TODO another thing to double check is true_position variable, how intializing and changing it works across iterations.
-
-// TODO i will add some error checking in multiple places, but i will want to double check exactly how i will handle those errors in finshed product
-
-// TODO perhaps add a conditional logic flow chart.
-
-// TODO the likely issue is that when i skip the frame_size i am checking right at the beginning of the buffer, but there is prev_buffer end at the beginning,
-// the actual header is likely 4 bytes into the buffer. But it will fseek back on the first iteration.
