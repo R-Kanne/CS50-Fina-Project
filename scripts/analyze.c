@@ -137,13 +137,21 @@ int main(void)
 
     while (fread(buffer, 1, BUFFER_SIZE, file) > 0) 
     {
+        // Setting up the buffers
         unsigned char combined_buffer[BUFFER_SIZE + OVERLAP_SIZE];  // Initializing buffer that will actually be scanned for frame header.
 
-        memcpy(combined_buffer, prev_buffer, OVERLAP_SIZE); // Copying prev_buffer to combined_buffer
-
-        memcpy(combined_buffer + OVERLAP_SIZE, buffer, BUFFER_SIZE);    // Copying the current buffer into combined_buffer
-        // but skips the first four bytes where the prev_buffer is already.
-        // TODO add error checking, memcpy assumes these pointers are not NULL.
+        if (fseek_flag)
+            {
+                // We jumped ahead in the file — don't prepend stale data
+                memcpy(combined_buffer, buffer, BUFFER_SIZE);
+                memset(combined_buffer + BUFFER_SIZE, 0, OVERLAP_SIZE); // Optional: zero-fill tail
+            }
+        else
+            {
+                // Normal read: stitch together end of previous buffer and current buffer
+                memcpy(combined_buffer, prev_buffer, OVERLAP_SIZE);
+                memcpy(combined_buffer + OVERLAP_SIZE, buffer, BUFFER_SIZE);
+            }
 
         // Looping over the buffer
         for (int i = 0; i < (BUFFER_SIZE + OVERLAP_SIZE - 4); i++) 
@@ -203,18 +211,18 @@ int main(void)
                 }
 
                 // I have found a frame and want to skip ahead by its size to check for another.
-                long true_position = ftell(file) - (1028 - i);  // This should be current position in the file in bytes
+                long true_position = ftell(file) - (BUFFER_SIZE + OVERLAP_SIZE - i);  // This should be current position in the file in bytes
                 printf("True_position: %ld\n", true_position);
                 fseek(file, (true_position + frame_size), SEEK_SET);   // Skipping ahead in the file from the current position by frame_size
                 // TODO add some error checking to fseek and ftell
                 fseek_flag = true;
                 printf("SKIPPED AHEAD BY FRAMESIZE\n");
-                continue;
+                break;
                  
                  
             }
-            memcpy(prev_buffer, buffer + (BUFFER_SIZE - OVERLAP_SIZE), OVERLAP_SIZE); // Populating prev_buffer
-            // For clarity second argument uses pointer arithmetic to move along the pointer 1020 bytes
+        memcpy(prev_buffer, buffer + (BUFFER_SIZE - OVERLAP_SIZE), OVERLAP_SIZE); // Populating prev_buffer
+        // For clarity second argument uses pointer arithmetic to move along the pointer 1020 bytes
 
             if (fseek_flag)
             {
