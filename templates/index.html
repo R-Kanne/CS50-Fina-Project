@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
 
-<head>
-    <title>Main page</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
+{% block title %} {% endblock %}
 
-<body>
+{% block content %}
     <div id="Title">
         Bit Manipulation
     </div>
@@ -14,10 +10,6 @@
         <form method="POST" enctype="multipart/form-data">
             <input type="file" name="file">
             <button type="submit">Upload</button>
-        </form>
-        
-        
-    </div>
-</body>
-
-</html>
+        </form>   
+    </div>     
+{% endblock %}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bit Manipulation{% endblock %}</title>
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="navbar-left">
+                <a href="{{ url_for('index') }}" class="navbar-brand">Bit manipulation</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+
+        {% endblock %}
+    </main>
+
+    <footer>
+        </footer>
+</body>
+</html>
