@@ -1,4 +1,16 @@
+/* Index.html */
+
 #Title {
     text-align: center;
     font-size: 500%;
 }
+
+
+/* Navigation bar */
+
+.navbar {
+    font-size:xx-large;
+    background-image: url(assets/navbar.jpeg);
+}
+
+
