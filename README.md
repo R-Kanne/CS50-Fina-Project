@@ -36,6 +36,11 @@ The project is being developed as part of the final project for Harvard's CS50 c
 
 ## How to Run (Development)
 
-1. Compile the C backend parser:
+> [!IMPORTANT]
+> Ensure you have neccessary dependencies installed: **C language pack**, **GCC compiler**.
+1. Clone the project.
+2. Copy an mp3 file into the uploads/raw folder.
+3. Modify line 84: ``` FILE* file = fopen("../uploads/raw/YOUR_FILE.mp3", "rb")); ``` 
+4. Compile the C backend parser:
    ```bash
    gcc -o analyze analyze.c
