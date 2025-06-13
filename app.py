@@ -34,6 +34,20 @@ def index():
             # Securely save the filename to prevent directory traversal attacks
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+
+            try:
+                result = subprocess.run(
+                    ["./scripts/analyze", filepath],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+                output = result.stdout
+            except subprocess.CalledProcessError as e:
+                output = f"Error: {e.stderr}"
+
+
 
          # TODO i should validate that it is an mp3 file.
          # Really think trough the security aspect of receiving an unknown file to your server.

@@ -27,8 +27,14 @@ typedef struct // Struct for keeping track of frame data
 int is_valid_frame(FrameInfo frame);
 long size_of_frame(FrameInfo frame, const int bitrates[2][3][16], const int sampling_rate_table[4][4]);
 
-int main(void)
+int main(int argc, char *argv[])
 {
+
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <file>\n", argv[0]);
+        return 1;
+    }
+
     bool fseek_flag = false;
     bool ftell_flag = false;    // TODO might not need this flag
     unsigned char buffer[BUFFER_SIZE];   // Setting buffer syze to 1 kilobyte.
@@ -81,7 +87,7 @@ int main(void)
     };
 
 
-    FILE* file = fopen("../uploads/raw/zombie_dance.mp3", "rb");  // this needs to dynamically choose the file later
+    FILE* file = fopen(argv[1], "rb");  // this needs to dynamically choose the file later
     if (file == NULL)
     {
         perror("Failure opening the file");
