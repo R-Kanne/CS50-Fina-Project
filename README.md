@@ -44,3 +44,5 @@ The project is being developed as part of the final project for Harvard's CS50 c
 4. Compile the C backend parser:
    ```bash
    gcc -o analyze analyze.c
+5. Run the parser: ```./analyze```  
+Currently the parser just prints out few lines about the mp3 file to the terminal, but with slight modifications starting from line 206 you can print any piece of data contained in a frame header or extract it in any shape or form.
